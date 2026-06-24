@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lineup — APL Style</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,800;1,900&family=Barlow:wght@500;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:'Barlow Condensed',sans-serif;
+  background:#071428;
+  color:#fff;
+  min-height:100vh;
+}
+
+/* ===== EDITOR ===== */
+#editor{
+  max-width:940px;margin:0 auto;
+  padding:32px 20px 60px;
+}
+.ed-h{
+  text-align:center;font-size:11px;letter-spacing:6px;
+  color:#F0B830;text-transform:uppercase;margin-bottom:4px;
+}
+.ed-sub{
+  text-align:center;font-size:13px;color:#5A7AAA;
+  font-family:'Barlow',sans-serif;margin-bottom:28px;
+}
+.meta-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:8px;margin-bottom:20px;
+}
+.meta-grid input{
+  background:#0C1E3A;border:1px solid #1A3460;border-radius:6px;
+  padding:9px 12px;color:#fff;
+  font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:1px;
+  outline:none;width:100%;
+}
+.meta-grid input:focus{border-color:#F0B830;}
+
+.team-tabs{display:flex;gap:0;border-radius:8px 8px 0 0;overflow:hidden;}
+.tab-btn{
+  flex:1;padding:11px;background:#091830;
+  border:none;color:#5A7AAA;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;
+}
+.tab-btn.on{background:#0D2145;color:#fff;border-bottom:2px solid #F0B830;}
+
+.team-block{
+  background:#0D2145;border:1px solid #1A3460;
+  border-top:none;border-radius:0 0 10px 10px;
+  padding:16px;margin-bottom:18px;
+}
+.tname-row{display:flex;gap:8px;margin-bottom:14px;align-items:center;}
+.tname-row input.tname{
+  flex:1;background:#071428;border:1px solid #1A3460;border-radius:6px;
+  padding:9px 12px;color:#fff;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:19px;font-weight:700;letter-spacing:2px;text-transform:uppercase;outline:none;
+}
+.tname-row input.tname:focus{border-color:#F0B830;}
+.color-wrap{display:flex;align-items:center;gap:6px;}
+.color-wrap label{font-size:10px;letter-spacing:2px;color:#5A7AAA;}
+.color-wrap input[type=color]{
+  width:32px;height:32px;border:2px solid #1A3460;
+  border-radius:6px;cursor:pointer;background:none;padding:2px;
+}
+
+.ph-row{
+  display:grid;grid-template-columns:1fr 1fr 64px;
+  gap:6px;padding-bottom:5px;
+}
+.ph{font-size:10px;letter-spacing:2px;color:#5A7AAA;font-family:'Barlow',sans-serif;}
+.prow{
+  display:grid;grid-template-columns:1fr 1fr 64px;
+  gap:6px;margin-bottom:6px;
+}
+.prow input{
+  background:#071428;border:1px solid #1A3460;border-radius:5px;
+  padding:7px 9px;color:#fff;
+  font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;width:100%;
+}
+.prow input:focus{border-color:#F0B830;}
+.prow input.sm{font-size:12px;letter-spacing:1px;color:#8BAAC0;text-align:center;}
+.prow input.url{font-size:11px;color:#8BAAC0;font-family:'Barlow',sans-serif;}
+
+.add-p{
+  width:100%;padding:7px;background:transparent;
+  border:1px dashed #1A3460;border-radius:5px;color:#5A7AAA;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;
+  cursor:pointer;margin-top:2px;transition:all .2s;
+}
+.add-p:hover{border-color:#F0B830;color:#F0B830;}
+
+.go-btn{
+  display:block;width:100%;padding:15px;
+  background:linear-gradient(135deg,#1652C0,#0E3A90);
+  color:#fff;border:2px solid #F0B830;border-radius:8px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:22px;font-weight:900;letter-spacing:5px;text-transform:uppercase;
+  cursor:pointer;
+  box-shadow:0 0 28px rgba(240,184,48,.2),0 4px 20px rgba(0,0,0,.5);
+  transition:transform .15s,box-shadow .2s;
+}
+.go-btn:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(240,184,48,.35),0 8px 28px rgba(0,0,0,.6);}
+
+/* ===== DISPLAY ===== */
+#display{
+  display:none;position:fixed;inset:0;
+  background:#071428;z-index:999;
+  flex-direction:column;overflow:hidden;
+}
+
+/* BG — diagonal speed lines like the RoV screenshot */
+.d-bg{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 90% at 50% 55%, #0D2A6A 0%, #071428 65%);
+}
+.d-lines{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(-52deg,
+      transparent 0,transparent 38px,
+      rgba(40,90,200,.07) 38px,rgba(40,90,200,.07) 39px);
+}
+/* lightning crack top-left like screenshot */
+.d-crack{
+  position:absolute;top:0;left:0;width:260px;height:260px;
+  pointer-events:none;opacity:.35;
+}
+
+/* TOP HEADER */
+.d-top{
+  position:relative;z-index:10;
+  height:100px;
+  display:flex;align-items:center;
+  justify-content:space-between;
+  padding:0 48px;flex-shrink:0;
+}
+
+/* big LINEUP title — italic bold white like screenshot */
+.lineup-title{
+  display:flex;align-items:center;gap:14px;
+  position:absolute;left:50%;transform:translateX(-50%);
+}
+.bolt-box{
+  width:56px;height:56px;
+  background:#1B5FD4;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(58,139,245,.5);
+  flex-shrink:0;
+}
+.bolt-svg{width:30px;height:30px;fill:#fff;}
+.title-word{
+  font-size:68px;font-weight:900;font-style:italic;
+  letter-spacing:6px;text-transform:uppercase;
+  line-height:1;
+  color:#fff;
+  text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 40px rgba(80,140,255,.3);
+  -webkit-text-stroke:1px rgba(255,255,255,.15);
+}
+
+.d-top-left{z-index:1;}
+.event-tag{font-size:10px;letter-spacing:5px;color:#F0B830;text-transform:uppercase;}
+.event-name{font-size:13px;color:#6A8AAA;font-family:'Barlow',sans-serif;margin-top:2px;}
+.d-top-right{z-index:1;text-align:right;}
+.match-tag{font-size:10px;letter-spacing:4px;color:#F0B830;text-transform:uppercase;}
+.match-date{font-size:12px;color:#6A8AAA;font-family:'Barlow',sans-serif;margin-top:2px;}
+
+/* TEAM NAME BAR */
+.team-name-bar{
+  position:relative;z-index:10;
+  display:flex;align-items:center;justify-content:center;
+  height:36px;flex-shrink:0;
+}
+.team-name-txt{
+  font-size:22px;font-weight:800;letter-spacing:4px;
+  text-transform:uppercase;
+}
+
+/* CARDS ROW */
+.cards-row{
+  position:relative;z-index:10;
+  flex:1;
+  display:flex;align-items:center;justify-content:center;
+  gap:20px;
+  padding:0 48px 12px;
+}
+
+/* card */
+.cw{
+  perspective:1000px;
+  flex:1;max-width:210px;
+  aspect-ratio:3/4;
+  opacity:0;
+  transform:translateY(50px) scale(.9);
+  transition:opacity .45s ease, transform .45s ease;
+}
+.cw.show{opacity:1;transform:translateY(0) scale(1);}
+.card{
+  width:100%;height:100%;
+  position:relative;transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.4,0,.2,1);
+}
+.card.flipped{transform:rotateY(180deg);}
+.face{
+  position:absolute;inset:0;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:14px;overflow:hidden;
+}
+
+/* FRONT — exact APL card look */
+.front{
+  border:2px solid #C8941A;
+  box-shadow:0 0 18px rgba(200,148,26,.35),0 6px 28px rgba(0,0,0,.7);
+  background:linear-gradient(155deg,#7A1010 0%,#3A0808 30%,#0A1428 60%,#122060 100%);
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:space-between;
+  padding:14px 12px 12px;
+}
+.front-top{display:flex;flex-direction:column;align-items:center;gap:5px;}
+/* 4-pointed star SVG like RoV logo */
+.star-svg{width:32px;height:32px;opacity:.9;filter:drop-shadow(0 0 6px rgba(240,184,48,.5));}
+.apl-text{
+  font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(255,255,255,.55);text-align:center;line-height:1.6;
+}
+.front-mid{
+  text-align:center;
+}
+.valor-line{
+  font-size:22px;font-weight:900;font-style:italic;
+  text-transform:uppercase;letter-spacing:1px;line-height:1.05;
+  text-shadow:0 2px 6px rgba(0,0,0,.8);
+}
+.valor-line .hl{color:#F0D060;}
+.front-bot{
+  font-size:8px;letter-spacing:4px;color:rgba(255,255,255,.35);
+  text-transform:uppercase;
+  border-top:1px solid rgba(255,255,255,.12);
+  padding-top:8px;width:100%;text-align:center;
+}
+/* subtle sheen */
+.front::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(130deg,rgba(255,255,255,.07) 0%,transparent 45%);
+  pointer-events:none;
+}
+
+/* BACK — player photo card */
+.back{
+  transform:rotateY(180deg);
+  border-radius:14px;overflow:hidden;
+}
+.back-inner{width:100%;height:100%;position:relative;display:flex;flex-direction:column;}
+.player-img{
+  width:100%;flex:1;
+  object-fit:cover;object-position:top center;display:block;
+}
+.player-placeholder{
+  width:100%;flex:1;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#0E2050 0%,#1B5FD4 100%);
+}
+/* silhouette SVG */
+.sil-svg{width:60%;height:60%;opacity:.25;fill:#fff;}
+
+.name-bar{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:36px 12px 11px;
+  background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.6) 55%,transparent 100%);
+}
+.p-name{
+  font-size:20px;font-weight:900;
+  letter-spacing:1.5px;text-transform:uppercase;
+  line-height:1;text-shadow:0 2px 6px rgba(0,0,0,.9);
+}
+.p-role{
+  font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.45);
+  text-transform:uppercase;margin-top:3px;
+}
+/* role icon box top-left like screenshot */
+.role-box{
+  position:absolute;top:9px;left:9px;
+  width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.role-svg{width:16px;height:16px;}
+
+/* BOTTOM BAR */
+.d-bot{
+  position:relative;z-index:10;
+  height:52px;flex-shrink:0;
+  background:rgba(5,10,22,.88);
+  border-top:1px solid rgba(240,184,48,.12);
+  display:flex;align-items:center;justify-content:center;
+  gap:20px;
+}
+.bot-item{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;font-weight:700;letter-spacing:2px;
+  color:rgba(255,255,255,.4);text-transform:uppercase;
+}
+.bot-div{width:1px;height:18px;background:rgba(255,255,255,.1);}
+
+/* TIMER BAR */
+.timer-wrap{
+  position:fixed;bottom:60px;left:50%;transform:translateX(-50%);
+  z-index:1001;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(5,10,22,.88);
+  border:1px solid rgba(240,184,48,.2);
+  border-radius:20px;padding:6px 16px;
+  backdrop-filter:blur(8px);
+  font-size:11px;letter-spacing:2px;color:#5A7AAA;
+}
+.t-label{white-space:nowrap;}
+.t-track{width:100px;height:3px;background:#1A3460;border-radius:2px;overflow:hidden;}
+.t-fill{height:100%;background:#F0B830;border-radius:2px;transition:width .1s linear;}
+.t-num{color:#F0B830;font-weight:700;font-size:16px;min-width:18px;text-align:center;}
+
+/* SWITCH OVERLAY */
+.switch-ov{
+  position:fixed;inset:0;z-index:600;
+  background:#071428;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .4s;
+}
+.switch-ov.on{opacity:1;pointer-events:all;}
+.sw-text{
+  font-size:56px;font-weight:900;font-style:italic;
+  letter-spacing:5px;text-transform:uppercase;
+  text-shadow:0 0 40px rgba(240,184,48,.5);
+}
+
+/* CONTROLS */
+.ctrl{
+  position:fixed;top:16px;right:16px;z-index:1002;
+  display:flex;gap:8px;
+}
+.cbtn{
+  background:rgba(5,10,22,.85);border:1px solid #1A3460;
+  color:#5A7AAA;font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;letter-spacing:2px;padding:7px 14px;
+  border-radius:5px;cursor:pointer;transition:all .2s;
+  backdrop-filter:blur(8px);
+}
+.cbtn:hover{color:#F0B830;border-color:#F0B830;}
+
+@media(max-width:640px){
+  .meta-grid{grid-template-columns:1fr;}
+  .cards-row{gap:8px;padding:0 12px 10px;}
+  .cw{max-width:120px;}
+  .title-word{font-size:38px;}
+  .bolt-box{width:36px;height:36px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== EDITOR ===== -->
+<div id="editor">
+  <div class="ed-h">APL Lineup Reveal</div>
+  <div class="ed-sub">กรอกข้อมูล → SHOW → การ์ดขึ้น → รอ 10 วิ → flip เปิดรูปผู้เล่น</div>
+
+  <div class="meta-grid">
+    <input id="eLabel" value="APL 2026" placeholder="ชื่อรายการ">
+    <input id="eEvent" value="Arena of Valor Premier League" placeholder="Event name">
+    <input id="eDate" placeholder="วันที่ / สนาม">
+  </div>
+
+  <div class="team-tabs">
+    <button class="tab-btn on" onclick="switchTab('A',this)">ทีม A (แสดงก่อน)</button>
+    <button class="tab-btn" onclick="switchTab('B',this)">ทีม B (แสดงหลัง)</button>
+  </div>
+
+  <div class="team-block" id="blkA">
+    <div class="tname-row">
+      <input class="tname" id="nameA" value="BRU ESPORTS" placeholder="ชื่อทีม A" maxlength="24">
+      <div class="color-wrap"><label>สีทีม</label><input type="color" id="colA" value="#1B5FD4"></div>
+    </div>
+    <div class="ph-row">
+      <div class="ph">ชื่อ IGN</div>
+      <div class="ph">URL รูปผู้เล่น</div>
+      <div class="ph">ตำแหน่ง</div>
+    </div>
+    <div id="lstA"></div>
+    <button class="add-p" onclick="addRow('A')">+ เพิ่มผู้เล่น</button>
+  </div>
+
+  <div class="team-block" id="blkB" style="display:none">
+    <div class="tname-row">
+      <input class="tname" id="nameB" value="INFINITY" placeholder="ชื่อทีม B" maxlength="24">
+      <div class="color-wrap"><label>สีทีม</label><input type="color" id="colB" value="#E53E3E"></div>
+    </div>
+    <div class="ph-row">
+      <div class="ph">ชื่อ IGN</div>
+      <div class="ph">URL รูปผู้เล่น</div>
+      <div class="ph">ตำแหน่ง</div>
+    </div>
+    <div id="lstB"></div>
+    <button class="add-p" onclick="addRow('B')">+ เพิ่มผู้เล่น</button>
+  </div>
+
+  <button class="go-btn" onclick="showDisplay()">SHOW LINEUP</button>
+  <p style="text-align:center;margin-top:10px;font-size:12px;color:#5A7AAA;font-family:'Barlow',sans-serif;letter-spacing:1px">
+    ทีม A ขึ้นก่อน → 10 วิ flip → ดูอีก 10 วิ → สลับทีม B อัตโนมัติ
+  </p>
+</div>
+
+<!-- ===== DISPLAY ===== -->
+<div id="display">
+  <div class="d-bg"></div>
+  <div class="d-lines"></div>
+
+  <!-- lightning crack SVG top-left -->
+  <svg class="d-crack" viewBox="0 0 260 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polyline points="80,0 40,90 80,80 20,200 60,190 0,260" stroke="#4488FF" stroke-width="2.5" fill="none" opacity=".7"/>
+    <polyline points="140,0 110,60 130,55 90,140" stroke="#66AAFF" stroke-width="1.5" fill="none" opacity=".5"/>
+    <polyline points="200,0 185,50 200,48 170,110" stroke="#88BBFF" stroke-width="1" fill="none" opacity=".3"/>
+  </svg>
+
+  <!-- TOP -->
+  <div class="d-top">
+    <div class="d-top-left">
+      <div class="event-tag" id="d-label"></div>
+      <div class="event-name" id="d-event"></div>
+    </div>
+
+    <div class="lineup-title">
+      <div class="bolt-box">
+        <!-- double lightning bolt SVG like RoV APL -->
+        <svg class="bolt-svg" viewBox="0 0 30 30" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="18,2 8,17 14,17 12,28 22,13 16,13"/>
+        </svg>
+      </div>
+      <div class="title-word">LINEUP</div>
+    </div>
+
+    <div class="d-top-right">
+      <div class="match-tag" id="d-match"></div>
+      <div class="match-date" id="d-date"></div>
+    </div>
+  </div>
+
+  <!-- Team label -->
+  <div class="team-name-bar">
+    <div class="team-name-txt" id="d-tname"></div>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards-row" id="cardsRow"></div>
+
+  <!-- Bottom bar -->
+  <div class="d-bot">
+    <div class="bot-item">
+      <!-- star icon -->
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="rgba(255,255,255,.4)">
+        <polygon points="10,1 12.5,7.5 19,10 12.5,12.5 10,19 7.5,12.5 1,10 7.5,7.5"/>
+      </svg>
+      <span id="d-bot1"></span>
+    </div>
+    <div class="bot-div"></div>
+    <div class="bot-item">
+      <svg width="13" height="13" viewBox="0 0 20 20" fill="rgba(255,255,255,.4)">
+        <path d="M10 2L12 8H18L13 12L15 18L10 14L5 18L7 12L2 8H8Z"/>
+      </svg>
+      ARENA OF VALOR
+    </div>
+    <div class="bot-div"></div>
+    <div class="bot-item" id="d-bot2"></div>
+  </div>
+
+  <!-- Timer -->
+  <div class="timer-wrap" id="timerWrap" style="display:none">
+    <span class="t-label" id="timerLabel">FLIP IN</span>
+    <div class="t-track"><div class="t-fill" id="tFill"></div></div>
+    <span class="t-num" id="tNum">10</span>
+  </div>
+
+  <!-- Switch overlay -->
+  <div class="switch-ov" id="switchOv">
+    <div class="sw-text" id="swText"></div>
+  </div>
+
+  <!-- Controls -->
+  <div class="ctrl">
+    <button class="cbtn" onclick="replayTeam()">REPLAY</button>
+    <button class="cbtn" onclick="toggleFS()">FULLSCREEN</button>
+    <button class="cbtn" onclick="closeDisplay()">EDIT</button>
+  </div>
+</div>
+
+<script>
+// SVGs for role icons (no emoji)
+const ROLE_SVGS = {
+  'TOP':`<svg class="role-svg" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><circle cx="17" cy="17" r="4"/></svg>`,
+  'JUNGLE':`<svg class="role-svg" viewBox="0 0 24 24" fill="white"><path d="M12 2C8 2 4 5 4 9c0 5 8 13 8 13s8-8 8-13c0-4-4-7-8-7zm0 9a2 2 0 110-4 2 2 0 010 4z"/></svg>`,
+  'MID':`<svg class="role-svg" viewBox="0 0 24 24" fill="white"><polygon points="12,2 22,20 2,20"/></svg>`,
+  'CARRY':`<svg class="role-svg" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M4.2 19.8l2.8-2.8M17 7l2.8-2.8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>`,
+  'SUPPORT':`<svg class="role-svg" viewBox="0 0 24 24" fill="white"><path d="M12 21.7C5.8 18 2 13.4 2 9a7 7 0 0114 0 7 7 0 0114 0c0 4.4-3.8 9-10 12.7z"/></svg>`,
+  'DEFAULT':`<svg class="role-svg" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`
+};
+function getRoleSVG(pos){ return ROLE_SVGS[pos.toUpperCase()]||ROLE_SVGS['DEFAULT']; }
+
+// default players
+const DEF = {
+  A:[
+    {name:'LITTLEBOYZ',url:'',pos:'TOP'},
+    {name:'ALMONDP',url:'',pos:'JUNGLE'},
+    {name:'NUNU',url:'',pos:'MID'},
+    {name:'LICKY',url:'',pos:'CARRY'},
+    {name:'DEAWWY',url:'',pos:'SUPPORT'},
+  ],
+  B:[
+    {name:'PLAYER B1',url:'',pos:'TOP'},
+    {name:'PLAYER B2',url:'',pos:'JUNGLE'},
+    {name:'PLAYER B3',url:'',pos:'MID'},
+    {name:'PLAYER B4',url:'',pos:'CARRY'},
+    {name:'PLAYER B5',url:'',pos:'SUPPORT'},
+  ]
+};
+
+let curTeam='A', timerInt=null, timerSec=10;
+
+function switchTab(t,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('blkA').style.display=t==='A'?'block':'none';
+  document.getElementById('blkB').style.display=t==='B'?'block':'none';
+}
+
+function mkRow(team,p){
+  const d=document.createElement('div');
+  d.className='prow';
+  d.innerHTML=`
+    <input value="${p.name}" placeholder="ชื่อ IGN">
+    <input class="url" value="${p.url}" placeholder="https://...">
+    <input class="sm" value="${p.pos}" placeholder="TOP" maxlength="8">
+  `;
+  document.getElementById('lst'+team).appendChild(d);
+}
+function addRow(t){ mkRow(t,{name:'',url:'',pos:''}); }
+
+function getPlayers(t){
+  return Array.from(document.querySelectorAll('#lst'+t+' .prow')).map(r=>{
+    const i=r.querySelectorAll('input');
+    return{name:i[0].value.trim(),url:i[1].value.trim(),pos:i[2].value.trim()};
+  }).filter(p=>p.name);
+}
+
+// ---- DISPLAY ----
+function showDisplay(){
+  clearTimer();
+  curTeam='A';
+  const label=document.getElementById('eLabel').value;
+  const ev=document.getElementById('eEvent').value;
+  const date=document.getElementById('eDate').value;
+  document.getElementById('d-label').textContent=label;
+  document.getElementById('d-event').textContent=ev;
+  document.getElementById('d-match').textContent=label;
+  document.getElementById('d-date').textContent=date;
+  document.getElementById('d-bot1').textContent=label;
+  document.getElementById('d-bot2').textContent=ev.toUpperCase();
+
+  document.getElementById('display').style.display='flex';
+  document.getElementById('display').style.flexDirection='column';
+  document.getElementById('editor').style.display='none';
+  renderTeam('A');
+}
+
+function renderTeam(team){
+  curTeam=team;
+  const col=document.getElementById('col'+team).value;
+  const name=document.getElementById('name'+team).value;
+  const players=getPlayers(team);
+
+  // team name
+  const tn=document.getElementById('d-tname');
+  tn.textContent=name;
+  tn.style.color=col;
+
+  // build cards
+  const row=document.getElementById('cardsRow');
+  row.innerHTML='';
+  players.forEach(p=>row.appendChild(mkCard(p,col)));
+
+  // stagger show
+  const wraps=row.querySelectorAll('.cw');
+  wraps.forEach((w,i)=>setTimeout(()=>w.classList.add('show'),180+i*110));
+
+  // after last card shown, start flip timer
+  const afterShow=180+players.length*110+500;
+  setTimeout(()=>startTimer(10,()=>flipAll(team),players.length),afterShow);
+}
+
+function mkCard(p,col){
+  const cw=document.createElement('div');
+  cw.className='cw';
+  const card=document.createElement('div');
+  card.className='card';
+
+  // FRONT
+  const front=document.createElement('div');
+  front.className='face front';
+  front.style.borderColor=hexToGold(col);
+  front.style.boxShadow=`0 0 18px ${col}55, 0 6px 28px rgba(0,0,0,.7)`;
+  front.innerHTML=`
+    <div class="front-top">
+      <svg class="star-svg" viewBox="0 0 40 40" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="20,2 23,17 38,20 23,23 20,38 17,23 2,20 17,17"/>
+      </svg>
+      <div class="apl-text">ARENA OF VALOR<br>PREMIER LEAGUE<br>2026</div>
+    </div>
+    <div class="front-mid">
+      <div class="valor-line">VALOR <span class="hl">RISES</span></div>
+      <div class="valor-line">BATTLES <span class="hl">COLLIDE</span></div>
+    </div>
+    <div class="front-bot">A &nbsp; P &nbsp; L &nbsp; &nbsp; 2 0 2 6</div>
+  `;
+
+  // BACK
+  const back=document.createElement('div');
+  back.className='face back';
+  back.style.border=`2px solid ${col}`;
+  back.style.boxShadow=`0 0 24px ${col}66, 0 6px 28px rgba(0,0,0,.8)`;
+
+  const roleColor=col+'33';
+  const roleBorder=col+'66';
+  const roleSVG=getRoleSVG(p.pos);
+
+  let photo='';
+  if(p.url){
+    photo=`<img class="player-img" src="${p.url}" alt="${p.name}" onerror="this.outerHTML='<div class=\\'player-placeholder\\'>${silSVG()}</div>'">`;
+  } else {
+    photo=`<div class="player-placeholder">${silSVG()}</div>`;
+  }
+
+  back.innerHTML=`
+    <div class="back-inner">
+      ${photo}
+      <div class="name-bar">
+        <div class="p-name">${p.name}</div>
+        <div class="p-role">${p.pos}</div>
+      </div>
+      <div class="role-box" style="background:${roleColor};border:1px solid ${roleBorder}">${roleSVG}</div>
+    </div>
+  `;
+
+  card.appendChild(front);
+  card.appendChild(back);
+  cw.appendChild(card);
+  return cw;
+}
+
+function silSVG(){
+  return `<svg class="sil-svg" viewBox="0 0 100 120" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="35" r="22"/>
+    <path d="M10 110 Q10 75 50 75 Q90 75 90 110Z"/>
+  </svg>`;
+}
+
+function hexToGold(hex){
+  // just return gold-ish tone for front border
+  return '#C8941A';
+}
+
+function flipAll(team){
+  document.querySelectorAll('#cardsRow .card').forEach((c,i)=>{
+    setTimeout(()=>c.classList.add('flipped'),i*150);
+  });
+  // if team A, wait 10s then switch to B
+  if(team==='A'){
+    const n=document.querySelectorAll('#cardsRow .card').length;
+    setTimeout(()=>startTimer(10,()=>doSwitch(),'NEXT TEAM'),n*150+1500);
+  }
+}
+
+function doSwitch(){
+  const col=document.getElementById('colB').value;
+  const name=document.getElementById('nameB').value;
+  const sw=document.getElementById('switchOv');
+  document.getElementById('swText').textContent=name;
+  document.getElementById('swText').style.color=col;
+  sw.classList.add('on');
+  setTimeout(()=>{sw.classList.remove('on');renderTeam('B');},1800);
+}
+
+function startTimer(sec,cb,label='FLIP IN'){
+  clearTimer();
+  timerSec=sec;
+  const wrap=document.getElementById('timerWrap');
+  const fill=document.getElementById('tFill');
+  const num=document.getElementById('tNum');
+  document.getElementById('timerLabel').textContent=label;
+  wrap.style.display='flex';
+  fill.style.width='100%';
+  num.textContent=timerSec;
+
+  timerInt=setInterval(()=>{
+    timerSec--;
+    fill.style.width=(timerSec/sec*100)+'%';
+    num.textContent=timerSec;
+    if(timerSec<=0){
+      clearTimer();
+      wrap.style.display='none';
+      cb();
+    }
+  },1000);
+}
+
+function clearTimer(){
+  if(timerInt)clearInterval(timerInt);
+  timerInt=null;
+  document.getElementById('timerWrap').style.display='none';
+}
+
+function replayTeam(){
+  clearTimer();
+  document.querySelectorAll('#cardsRow .card').forEach(c=>c.classList.remove('flipped'));
+  const n=document.querySelectorAll('#cardsRow .card').length;
+  setTimeout(()=>startTimer(10,()=>flipAll(curTeam),'FLIP IN'),600);
+}
+
+function closeDisplay(){
+  clearTimer();
+  document.getElementById('display').style.display='none';
+  document.getElementById('editor').style.display='block';
+}
+
+function toggleFS(){
+  if(!document.fullscreenElement) document.getElementById('display').requestFullscreen();
+  else document.exitFullscreen();
+}
+
+// init
+DEF.A.forEach(p=>mkRow('A',p));
+DEF.B.forEach(p=>mkRow('B',p));
+document.getElementById('eDate').value=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+</script>
+</body>
+</html>
